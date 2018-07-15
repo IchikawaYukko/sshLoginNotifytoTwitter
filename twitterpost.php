@@ -16,7 +16,7 @@ if (isset($argv[1])) {
     $status = $rootMessage;
   }
 } else {
-  $status = $loginMessage.$uptimeMessage;
+  $status = $loginMessage." ".getLoginBonus();
 }
 
 tweet($status);
@@ -63,5 +63,22 @@ function GeoIP($ipaddr) {
 
 function getUptime() {
   return exec ("uptime |cut -f 4-7 -d ' '");
+}
+
+function getLoginBonus() {
+  global $uptimeMessage, $loginBonusMessage;
+
+  $bonus = array();
+  $bonusfile = new SplFileObject(dirname(__FILE__)."/loginbonus");
+  $bonusfile->setFlags(SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+
+  foreach($bonusfile as $line) {
+    if($line === false) continue;
+    array_push( $bonus, $loginBonusMessage.$line );
+  }
+  array_push( $bonus, $uptimeMessage );
+
+  shuffle( $bonus );
+  return $bonus[0];
 }
 ?>
