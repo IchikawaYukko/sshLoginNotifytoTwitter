@@ -5,10 +5,10 @@ $COUNTRY = GeoIP($IPADDR);
 $UPTIME = getUptime();
 
 // Load settings
-require "settings.php";
+require dirname(__FILE__)."/"."settings.php";
 
 // OAuthライブラリの読み込み
-require "twitteroauth/autoload.php";
+require dirname(__FILE__)."/"."twitteroauth/autoload.php";
 use Abraham\TwitterOAuth\TwitterOAuth;
 
 if (isset($argv[1])) {
