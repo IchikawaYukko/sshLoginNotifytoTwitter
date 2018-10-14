@@ -81,4 +81,3 @@ function getLoginBonus() {
   shuffle( $bonus );
   return $bonus[0];
 }
-?>

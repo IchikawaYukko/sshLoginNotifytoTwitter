@@ -9,4 +9,3 @@ $loginMessage = "百合子さんが $IPADDR($COUNTRY) から ConoHa にsshログ
 $uptimeMessage = "サーバのUptime:$UPTIME(自動投稿)";
 $rootMessage = "百合子さんがrootに権限昇格しました♪ (自動投稿)";
 $loginBonusMessage = "ログインぼおなす！：";
-?>
