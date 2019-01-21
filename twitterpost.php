@@ -76,15 +76,17 @@ function getUptime() {
 function getLoginBonus() {
   global $uptimeMessage, $loginBonusMessage;
 
-  $bonus = array();
+  $bonus = [];
   $bonusfile = new SplFileObject(dirname(__FILE__)."/loginbonus");
   $bonusfile->setFlags(SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
 
   foreach($bonusfile as $line) {
     if($line === false) continue;
-    array_push( $bonus, $loginBonusMessage.$line );
+    //array_push( $bonus, $loginBonusMessage.$line );
+    $bonus[] = $loginBonusMessage.$line;
   }
-  array_push( $bonus, $uptimeMessage );
+  $bonus[] = $uptimeMessage;
+  //array_push( $bonus, $uptimeMessage );
 
   shuffle( $bonus );
   return $bonus[0];
