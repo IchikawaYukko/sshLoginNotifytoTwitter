@@ -39,10 +39,18 @@ function tweet($stat) {
   //var_dump($res);
 }
 
+function isIPv6(string $ipaddr) {
+  if(strpos($ipaddr, ':')) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 function GeoIP($ipaddr) {
   //Get contry code from IP address
-  if(strpos($ipaddr, ':') === false) {
-    $contry_code = exec("geoiplookup $ipaddr|cut -b 24-25");
+  if(!isIPv6($ipaddr)) {
+    $contry_code = exec("geoiplookup $ipaddr|cut -b 24-25");  // TODO use composer geoip/geoip instead exec();
   } else {
     $contry_code = exec("geoiplookup6 $ipaddr|cut -b 27-28");
   }
