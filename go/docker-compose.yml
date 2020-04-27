@@ -1,0 +1,13 @@
+# Launch build environment
+# Type:
+# docker-compose run build-env
+
+version: '2'
+
+services:
+  build-env:
+    image: golang:stretch
+    volumes:
+      - .:/go/src/
+
+# Deps: apt-get install geoip-bin
