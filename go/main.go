@@ -1,12 +1,5 @@
 // ToDo
-// use configfile for status message
-//    config & loginbonus from json
 // use https://github.com/oschwald/geoip2-golang instead of geoiplookup command
-
-// translate from PHP version
-// $uptimeMessage = "サーバのUptime:$UPTIME(自動投稿)";
-// $rootMessage = "百合子さんがrootに権限昇格しました♪ (自動投稿)";
-
 package main
 
 import (
@@ -17,36 +10,101 @@ import (
 	"math"
 	"math/rand"
 	"time"
+	"flag"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"log"
-	// "github.com/ChimeraCoder/anaconda"
+	"regexp"
+	"github.com/ChimeraCoder/anaconda"
 	"./iso3166_1"
+	"encoding/json"
 )
 
-func main()  {
-	ssh_connection := strings.Split(os.Getenv("SSH_CONNECTION"), " ")
-	remote_ipaddr := ssh_connection[0]
-	country_code := GeoIP(remote_ipaddr)
-	country := iso3166_1.Country_name_ja[country_code]
-	fmt.Println("百合子さんが "+remote_ipaddr+"("+country+") から ConoHa にsshログインしました♪ ログインぼおなす！："+getLoginBonus())
+type Setting struct {
+	RootMessage string "json:rootMessage"
+	LoginMessage string "json:loginMessage"
+	LoginBonusMessage string "json:loginBonusMessage"
+	UptimeMessage string "json:uptimeMessage"
+	AutoPostMessage string "json:autoPostMessage"
+	Bonus []string `json:"loginbonus"`
 }
 
-// func tweet(text string)  {
-// 	api := getTwitterApi()
+var settings Setting
 
-// 	tweet, err := api.PostTweet(text, nil)
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
+func main()  {
+	exe, err := os.Executable()
+	if err != nil {
+		log.Fatal(err)
+	}
+	settings = loadSettings(filepath.Dir(exe) + "/settings.json")
 
-// func getTwitterApi() *anaconda.TwitterApi {
-// 	anaconda.SetConsumerKey(os.Getenv("TWITTER_CONSUMER_KEY"))
-// 	anaconda.SetConsumerSecret(os.Getenv("TWITTER_CONSUMER_SECRET"))
-// 	api := anaconda.NewTwitterApi(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_TOKEN_SECRET"))
-// 	return api
-// }
+	var (
+		rootflag bool
+		verboseflag bool
+		status string
+	)
+	flag.BoolVar(&rootflag, "r", false, "root login notify")
+	flag.BoolVar(&verboseflag, "v", false, "show twitted message")
+	flag.Parse()
+
+	if rootflag {
+		status = settings.RootMessage + settings.AutoPostMessage
+	} else {
+		ssh_connection := strings.Split(os.Getenv("SSH_CONNECTION"), " ")
+		remote_ipaddr := ssh_connection[0]
+		country_code := GeoIP(remote_ipaddr)
+		country := iso3166_1.Country_name_ja[country_code]
+
+		re := regexp.MustCompile("!!!!")
+		r1 := rand.New(rand.NewSource(time.Now().UnixNano()))
+		var bonus_or_uptime string
+		if r1.Intn(100) < 10 {
+			bonus_or_uptime = re.ReplaceAllString(settings.UptimeMessage, getUptime())
+		} else {
+			bonus_or_uptime = re.ReplaceAllString(settings.LoginBonusMessage, getLoginBonus())
+		}
+
+		status = re.ReplaceAllString(settings.LoginMessage, remote_ipaddr+"("+country+")") + bonus_or_uptime + settings.AutoPostMessage
+	}
+	tweet(status, verboseflag)
+}
+
+func loadSettings(filename string) Setting {
+	var data []byte
+	var err error
+	if data, err = ioutil.ReadFile(filename); err != nil {
+		log.Fatal(err)
+	}
+
+	var settings Setting
+	if err := json.Unmarshal(data, &settings); err !=nil {
+		log.Fatal(err)
+	}
+
+	return settings
+}
+
+func tweet(text string, verboseflag bool)  {
+	api := getTwitterApi()
+
+	var tweet anaconda.Tweet
+	var err error
+	if tweet, err = api.PostTweet(text, nil); err != nil {
+		panic(err)
+	}
+
+	if verboseflag {
+		fmt.Println(tweet.Text)
+	}
+}
+
+func getTwitterApi() *anaconda.TwitterApi {
+	anaconda.SetConsumerKey(os.Getenv("TWITTER_CONSUMER_KEY"))
+	anaconda.SetConsumerSecret(os.Getenv("TWITTER_CONSUMER_SECRET"))
+	api := anaconda.NewTwitterApi(os.Getenv("TWITTER_ACCESS_TOKEN"), os.Getenv("TWITTER_ACCESS_TOKEN_SECRET"))
+	return api
+}
 
 func isIPv6(ipaddr string) bool {
 	if -1 == strings.Index(ipaddr, ":") {
@@ -86,15 +144,14 @@ func getUptime() string {
 }
 
 func getLoginBonus() string {
-	data, _ := ioutil.ReadFile("loginbonus")
-	bonus := strings.Split(string(data), "\n")
+	// data, _ := ioutil.ReadFile("loginbonus")
+	// bonus := strings.Split(string(data), "\n")
 
-	bonus = append(bonus, getUptime())
+	bonus := settings.Bonus
 	shuffle(bonus)
 
 	return bonus[0]
 }
-
 
 func shuffle(data []string) {
 	n := len(data)

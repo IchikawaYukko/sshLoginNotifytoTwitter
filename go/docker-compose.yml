@@ -9,3 +9,5 @@ services:
     image: golang:stretch
     volumes:
       - .:/go/src/
+
+# Deps: apt-get install geoip-bin
