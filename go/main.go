@@ -3,36 +3,36 @@
 package main
 
 import (
+	"./iso3166_1"
+	"encoding/json"
+	"flag"
 	"fmt"
-	"strings"
+	"github.com/ChimeraCoder/anaconda"
 	"io/ioutil"
-	"strconv"
+	"log"
 	"math"
 	"math/rand"
-	"time"
-	"flag"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"log"
 	"regexp"
-	"github.com/ChimeraCoder/anaconda"
-	"./iso3166_1"
-	"encoding/json"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Setting struct {
-	RootMessage string "json:rootMessage"
-	LoginMessage string "json:loginMessage"
-	LoginBonusMessage string "json:loginBonusMessage"
-	UptimeMessage string "json:uptimeMessage"
-	AutoPostMessage string "json:autoPostMessage"
-	Bonus []string `json:"loginbonus"`
+	RootMessage       string   "json:rootMessage"
+	LoginMessage      string   "json:loginMessage"
+	LoginBonusMessage string   "json:loginBonusMessage"
+	UptimeMessage     string   "json:uptimeMessage"
+	AutoPostMessage   string   "json:autoPostMessage"
+	Bonus             []string `json:"loginbonus"`
 }
 
 var settings Setting
 
-func main()  {
+func main() {
 	exe, err := os.Executable()
 	if err != nil {
 		log.Fatal(err)
@@ -40,9 +40,9 @@ func main()  {
 	settings = loadSettings(filepath.Dir(exe) + "/settings.json")
 
 	var (
-		rootflag bool
+		rootflag    bool
 		verboseflag bool
-		status string
+		status      string
 	)
 	flag.BoolVar(&rootflag, "r", false, "root login notify")
 	flag.BoolVar(&verboseflag, "v", false, "show twitted message")
@@ -78,14 +78,14 @@ func loadSettings(filename string) Setting {
 	}
 
 	var settings Setting
-	if err := json.Unmarshal(data, &settings); err !=nil {
+	if err := json.Unmarshal(data, &settings); err != nil {
 		log.Fatal(err)
 	}
 
 	return settings
 }
 
-func tweet(text string, verboseflag bool)  {
+func tweet(text string, verboseflag bool) {
 	api := getTwitterApi()
 
 	var tweet anaconda.Tweet
@@ -119,9 +119,9 @@ func GeoIP(ipaddr string) string {
 	var err error
 
 	if isIPv6(ipaddr) {
-		out, err = exec.Command("sh", "-c", "geoiplookup6 " + ipaddr).Output()
+		out, err = exec.Command("sh", "-c", "geoiplookup6 "+ipaddr).Output()
 	} else {
-		out, err = exec.Command("sh", "-c", "geoiplookup " + ipaddr).Output()
+		out, err = exec.Command("sh", "-c", "geoiplookup "+ipaddr).Output()
 	}
 	if err != nil {
 		log.Fatal(err)
@@ -138,9 +138,9 @@ func GeoIP(ipaddr string) string {
 func getUptime() string {
 	data, _ := ioutil.ReadFile("/proc/uptime")
 	slice := strings.Split(string(data), " ")
-	num , _ := strconv.ParseFloat(slice[0], 64)
+	num, _ := strconv.ParseFloat(slice[0], 64)
 
-	return strconv.FormatFloat(math.Trunc(num / 60 / 60 / 24), 'f', 0, 64) + " days"
+	return strconv.FormatFloat(math.Trunc(num/60/60/24), 'f', 0, 64) + " days"
 }
 
 func getLoginBonus() string {
@@ -156,8 +156,8 @@ func getLoginBonus() string {
 func shuffle(data []string) {
 	n := len(data)
 	r1 := rand.New(rand.NewSource(time.Now().UnixNano()))
-    for i := n - 1; i >= 0; i-- {
+	for i := n - 1; i >= 0; i-- {
 		j := r1.Intn(i + 1)
-        data[i], data[j] = data[j], data[i]
-    }
+		data[i], data[j] = data[j], data[i]
+	}
 }
