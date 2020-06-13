@@ -1,4 +1,4 @@
-# Overview
+# Overview [日本語](READMEja.md)
 This command `login-tweet` will tweet notify message when user logged into server through SSH.
 
 Tested under CentOS 7 and go1.14.2 linux/amd64
